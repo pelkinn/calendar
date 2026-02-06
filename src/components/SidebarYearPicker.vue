@@ -9,7 +9,7 @@ import {
   SIDEBAR_YEAR_END,
 } from "@/types/calendar";
 
-const props = defineProps<{
+defineProps<{
   currentYear: number;
 }>();
 
