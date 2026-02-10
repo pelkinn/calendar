@@ -31,10 +31,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Debug SSH key (REMOVE AFTER USE)
-        run: echo "$SSH_KEY" | base64
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Download static artifacts
         uses: actions/download-artifact@v4
         with:
