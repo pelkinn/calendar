@@ -276,10 +276,14 @@ input {
     justify-content: center !important;
   }
 
-  /* Праздники при печати */
-  .day-cell.holiday-official .day-number {
+  /* Производственный календарь при печати */
+  .day-cell.production-holiday .day-number {
     color: #dc2626 !important;
     font-weight: 700 !important;
+  }
+
+  .day-cell.production-holiday {
+    position: relative !important;
   }
 
   .holiday-dot {
@@ -294,8 +298,8 @@ input {
     display: block !important;
   }
 
-  .day-cell.holiday {
-    position: relative !important;
+  .shortened-dot {
+    display: block !important;
   }
 
   @page {

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "fetch-calendar": "node scripts/fetch-production-calendar.mjs",
+    "build": "npm run fetch-calendar && vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
