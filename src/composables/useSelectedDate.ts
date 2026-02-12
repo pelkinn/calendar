@@ -1,9 +1,40 @@
 import { ref, readonly, computed } from "vue";
 
+const STORAGE_KEY = "calendar-selected-dates";
+
+/**
+ * Загрузить выбранные даты из localStorage
+ */
+function loadSelectedDates(): Set<string> {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return new Set(parsed.filter((d: unknown) => typeof d === "string"));
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return new Set();
+}
+
+/**
+ * Сохранить выбранные даты в localStorage
+ */
+function saveSelectedDates(dates: Set<string>): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(dates)));
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Composable для управления выбранными датами
  */
-const selectedDates = ref<Set<string>>(new Set());
+const selectedDates = ref<Set<string>>(loadSelectedDates());
 
 export function useSelectedDate() {
   /**
@@ -20,6 +51,7 @@ export function useSelectedDate() {
       newSet.add(date);
     }
     selectedDates.value = newSet;
+    saveSelectedDates(newSet);
   };
 
   /**
@@ -27,6 +59,7 @@ export function useSelectedDate() {
    */
   const clearSelection = () => {
     selectedDates.value = new Set();
+    saveSelectedDates(selectedDates.value);
   };
 
   /**
