@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow:
+
+Sitemap: https://calendar-online.online/sitemap.xml
+Host: calendar-online.online
