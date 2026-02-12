@@ -10,7 +10,7 @@ function loadShowHolidays(): boolean {
     const saved = localStorage.getItem("show-holidays");
     return saved === "true";
   } catch {
-    return false;
+    return true;
   }
 }
 

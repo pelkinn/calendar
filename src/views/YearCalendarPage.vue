@@ -107,6 +107,7 @@ const calendarMonths = computed(() => {
 
 // Заголовок
 const pageTitle = computed(() => `Календарь на ${props.year} год`);
+const pageTitleShort = computed(() => `${props.year} год`);
 
 // Печать
 const handlePrint = () => {
@@ -132,7 +133,40 @@ const holidaysTitle = computed(() =>
 
     <main class="calendar-layout">
       <header class="calendar-header">
-        <h1 class="calendar-title">{{ pageTitle }}</h1>
+        <h1 class="calendar-title">
+          <span class="title-full">{{ pageTitle }}</span>
+          <span class="title-short">{{ pageTitleShort }}</span>
+        </h1>
+
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <span class="legend-sample legend-sample--holiday">
+              <span class="legend-number">8</span>
+              <span class="legend-dot legend-dot--holiday"></span>
+            </span>
+            <span class="legend-label">Выходной / праздник</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-sample legend-sample--shortened">
+              <span class="legend-number legend-number--shortened">31</span>
+              <span class="legend-dot legend-dot--shortened"></span>
+            </span>
+            <span class="legend-label">Сокращённый день</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-sample legend-sample--today">
+              <span class="legend-number">12</span>
+            </span>
+            <span class="legend-label">Сегодня</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-sample legend-sample--selected">
+              <span class="legend-number">5</span>
+            </span>
+            <span class="legend-label">Выбранная дата</span>
+          </div>
+        </div>
+
         <div class="header-actions">
           <button
             class="holiday-toggle"
@@ -195,7 +229,8 @@ const holidaysTitle = computed(() =>
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
+  gap: 16px;
+  padding: 16px 32px;
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   position: sticky;
@@ -208,12 +243,19 @@ const holidaysTitle = computed(() =>
   font-weight: 600;
   color: var(--color-text);
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.title-short {
+  display: none;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .holiday-toggle,
@@ -262,6 +304,95 @@ const holidaysTitle = computed(() =>
   border-color: var(--color-border);
 }
 
+/* Легенда */
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-sample {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.legend-number {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.legend-sample--holiday .legend-number {
+  color: var(--color-holiday-official);
+}
+
+.legend-dot--holiday {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-holiday-official);
+}
+
+.legend-number--shortened {
+  color: var(--color-weekday);
+}
+
+.legend-dot--shortened {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--color-holiday);
+}
+
+.legend-sample--today .legend-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-today-bg);
+  border: 2px solid var(--color-today-border);
+  border-radius: 50%;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.legend-sample--selected .legend-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-selected-bg);
+  color: var(--color-selected-text);
+  border-radius: 50%;
+  font-weight: 600;
+}
+
+.legend-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
 /* Футер */
 .site-footer {
   padding: 24px 32px;
@@ -285,17 +416,31 @@ const holidaysTitle = computed(() =>
 }
 
 /* Адаптив: планшет */
-@media (max-width: 1024px) {
+@media (max-width: 1400px) {
   .calendar-layout {
     margin-left: 180px;
   }
 
   .calendar-header {
-    padding: 16px 24px;
+    flex-wrap: wrap;
+    padding: 12px 24px;
+    gap: 8px 12px;
   }
 
   .calendar-title {
     font-size: 1.25rem;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+
+  .calendar-legend {
+    width: 100%;
+    order: 3;
+    gap: 12px;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-border);
   }
 }
 
@@ -306,12 +451,20 @@ const holidaysTitle = computed(() =>
   }
 
   .calendar-header {
-    padding: 14px 16px;
+    padding: 12px 16px;
     padding-left: 60px; /* Место для кнопки меню */
   }
 
   .calendar-title {
     font-size: 1.125rem;
+  }
+
+  .title-full {
+    display: none;
+  }
+
+  .title-short {
+    display: inline;
   }
 
   .print-button {
@@ -328,14 +481,40 @@ const holidaysTitle = computed(() =>
     width: 36px;
     height: 36px;
   }
+
+  .calendar-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+  }
+
+  .legend-item {
+    gap: 4px;
+  }
+
+  .legend-label {
+    font-size: 0.6875rem;
+  }
+
+  .legend-sample {
+    width: 20px;
+    height: 20px;
+  }
+
+  .legend-number {
+    font-size: 0.6875rem;
+  }
+
+  .legend-sample--today .legend-number,
+  .legend-sample--selected .legend-number {
+    width: 20px;
+    height: 20px;
+    font-size: 0.6875rem;
+  }
 }
 
 /* Адаптив: узкие мобильные */
 @media (max-width: 480px) {
-  .calendar-header {
-    gap: 8px;
-  }
-
   .calendar-title {
     font-size: 1rem;
   }
