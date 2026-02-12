@@ -18,7 +18,7 @@
     <meta name="robots" content="index, follow" />
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://calendar.example.com/" />
+    <link rel="canonical" href="https://calendar-online.online/" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.png" />
@@ -34,12 +34,12 @@
       property="og:description"
       content="Удобный годовой календарь онлайн. Просматривайте календарь на любой год, выбирайте даты, печатайте календарь."
     />
-    <meta property="og:url" content="https://calendar.example.com/" />
+    <meta property="og:url" content="https://calendar-online.online/" />
     <meta property="og:site_name" content="Годовой календарь" />
     <meta property="og:locale" content="ru_RU" />
     <meta
       property="og:image"
-      content="https://calendar.example.com/og-image.png"
+      content="https://calendar-online.online/og-image.png"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -63,33 +63,57 @@
     <meta name="apple-mobile-web-app-title" content="Календарь" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- Структурированные данные JSON-LD (Schema.org) -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Годовой календарь",
-        "description": "Удобный годовой календарь онлайн. Просматривайте календарь на любой год, выбирайте даты, печатайте календарь.",
-        "url": "https://calendar.example.com/",
-        "applicationCategory": "UtilityApplication",
-        "operatingSystem": "Any",
-        "browserRequirements": "Requires JavaScript",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "RUB"
-        },
-        "featureList": [
-          "Просмотр календаря на любой год",
-          "Выбор даты",
-          "Печать календаря",
-          "Тёмная и светлая тема"
-        ],
-        "inLanguage": "ru"
-      }
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+      (function (m, e, t, r, i, k, a) {
+        m[i] =
+          m[i] ||
+          function () {
+            (m[i].a = m[i].a || []).push(arguments);
+          };
+        m[i].l = 1 * new Date();
+        for (var j = 0; j < document.scripts.length; j++) {
+          if (document.scripts[j].src === r) {
+            return;
+          }
+        }
+        ((k = e.createElement(t)),
+          (a = e.getElementsByTagName(t)[0]),
+          (k.async = 1),
+          (k.src = r),
+          a.parentNode.insertBefore(k, a));
+      })(
+        window,
+        document,
+        "script",
+        "https://mc.yandex.ru/metrika/tag.js?id=106791087",
+        "ym",
+      );
+
+      ym(106791087, "init", {
+        ssr: true,
+        webvisor: true,
+        clickmap: true,
+        ecommerce: "dataLayer",
+        referrer: document.referrer,
+        url: location.href,
+        accurateTrackBounce: true,
+        trackLinks: true,
+      });
     </script>
+    <!-- /Yandex.Metrika counter -->
   </head>
   <body>
+    <!-- Yandex.Metrika noscript -->
+    <noscript>
+      <div>
+        <img
+          src="https://mc.yandex.ru/watch/106791087"
+          style="position: absolute; left: -9999px"
+          alt=""
+        />
+      </div>
+    </noscript>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
