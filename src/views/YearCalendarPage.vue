@@ -163,6 +163,19 @@ const holidaysTitle = computed(() =>
       </header>
 
       <MonthGrid :months="calendarMonths" />
+
+      <footer class="site-footer">
+        <span>
+          Разработка —
+          <a
+            href="https://t.me/pelkin"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Александр Перепелкин
+          </a>
+        </span>
+      </footer>
     </main>
   </div>
 </template>
@@ -247,6 +260,28 @@ const holidaysTitle = computed(() =>
 .print-button:hover {
   background-color: var(--color-hover);
   border-color: var(--color-border);
+}
+
+/* Футер */
+.site-footer {
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.site-footer a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.site-footer a:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 /* Адаптив: планшет */

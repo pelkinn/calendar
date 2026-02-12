@@ -150,7 +150,8 @@ input {
   .print-button,
   .theme-toggle,
   .holiday-toggle,
-  .header-actions {
+  .header-actions,
+  .site-footer {
     display: none !important;
   }
 
