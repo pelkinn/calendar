@@ -1,14 +1,26 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { MonthData, MonthCell } from "@/types/calendar";
 import { useSelectedDate } from "@/composables/useSelectedDate";
+import { useHolidays } from "@/composables/useHolidays";
+import { getMonthHolidays, type Holiday } from "@/data/holidays";
 
-defineProps<{
+const props = defineProps<{
   month: MonthData;
 }>();
 
 const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const { isSelected, toggleDate } = useSelectedDate();
+const { showHolidays } = useHolidays();
+
+// Кэшируем праздники для текущего месяца
+const monthHolidays = computed(() => getMonthHolidays(props.month.monthIndex));
+
+const getHolidayForCell = (cell: MonthCell): Holiday | null => {
+  if (!cell.day) return null;
+  return monthHolidays.value.get(cell.day) ?? null;
+};
 
 const handleDayClick = (cell: MonthCell) => {
   if (cell.day !== null && cell.date) {
@@ -51,12 +63,24 @@ const handleDayClick = (cell: MonthCell) => {
               today: cell.isToday,
               selected: isSelected(cell.date),
               clickable: cell.day !== null,
+              holiday: showHolidays && getHolidayForCell(cell) !== null,
+              'holiday-official':
+                showHolidays && getHolidayForCell(cell)?.official === true,
             }"
+            :data-tooltip="
+              showHolidays && getHolidayForCell(cell)
+                ? getHolidayForCell(cell)!.name
+                : undefined
+            "
             @click="handleDayClick(cell)"
           >
             <span v-if="cell.day !== null" class="day-number">
               {{ cell.day }}
             </span>
+            <span
+              v-if="showHolidays && getHolidayForCell(cell)"
+              class="holiday-dot"
+            ></span>
           </td>
         </tr>
       </tbody>
@@ -179,5 +203,69 @@ const handleDayClick = (cell: MonthCell) => {
   background-color: var(--color-today-bg);
   border: 2px solid var(--color-today-border);
   color: var(--color-text);
+}
+
+/* === Праздники === */
+
+.day-cell.holiday {
+  position: relative;
+  cursor: help;
+}
+
+.day-cell.holiday .day-number {
+  color: var(--color-holiday);
+  font-weight: 600;
+}
+
+.day-cell.holiday-official .day-number {
+  color: var(--color-holiday-official);
+  font-weight: 700;
+}
+
+.holiday-dot {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-holiday);
+}
+
+.day-cell.holiday-official .holiday-dot {
+  background-color: var(--color-holiday-official);
+}
+
+/* Тултип при наведении (через CSS pseudo-element) */
+.day-cell.holiday[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background-color: var(--color-tooltip-bg);
+  color: var(--color-tooltip-text);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px var(--color-shadow-lg);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.day-cell.holiday[data-tooltip]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 0px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-tooltip-bg);
+  z-index: 100;
+  pointer-events: none;
 }
 </style>

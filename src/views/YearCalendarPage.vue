@@ -8,7 +8,9 @@ import SidebarYearPicker from "@/components/SidebarYearPicker.vue";
 import MonthGrid from "@/components/MonthGrid.vue";
 import ThemeIcon from "@/components/icons/ThemeIcon.vue";
 import PrintIcon from "@/components/icons/PrintIcon.vue";
+import HolidayIcon from "@/components/icons/HolidayIcon.vue";
 import { useTheme } from "@/composables/useTheme";
+import { useHolidays } from "@/composables/useHolidays";
 
 const props = defineProps<{
   year: number;
@@ -16,6 +18,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const { theme, toggleTheme } = useTheme();
+const { showHolidays, toggleHolidays } = useHolidays();
 
 // Динамические мета-теги для SEO
 useHead({
@@ -114,6 +117,10 @@ const themeTitle = computed(() =>
     ? "Переключить на тёмную тему"
     : "Переключить на светлую тему",
 );
+
+const holidaysTitle = computed(() =>
+  showHolidays.value ? "Скрыть праздники" : "Показать праздники",
+);
 </script>
 
 <template>
@@ -124,6 +131,15 @@ const themeTitle = computed(() =>
       <header class="calendar-header">
         <h1 class="calendar-title">{{ pageTitle }}</h1>
         <div class="header-actions">
+          <button
+            class="holiday-toggle"
+            :class="{ active: showHolidays }"
+            @click="toggleHolidays"
+            :title="holidaysTitle"
+            aria-label="Переключить отображение праздников"
+          >
+            <HolidayIcon :active="showHolidays" />
+          </button>
           <button
             class="theme-toggle"
             @click="toggleTheme"
@@ -184,6 +200,7 @@ const themeTitle = computed(() =>
   gap: 10px;
 }
 
+.holiday-toggle,
 .theme-toggle {
   display: flex;
   align-items: center;
@@ -197,10 +214,17 @@ const themeTitle = computed(() =>
   transition: all 0.15s ease;
 }
 
+.holiday-toggle:hover,
 .theme-toggle:hover {
   background-color: var(--color-hover);
   color: var(--color-text);
   border-color: var(--color-border);
+}
+
+.holiday-toggle.active {
+  color: var(--color-holiday-official);
+  border-color: var(--color-holiday-official);
+  background-color: var(--color-holiday-active-bg);
 }
 
 .print-button {
@@ -261,7 +285,8 @@ const themeTitle = computed(() =>
     display: none;
   }
 
-  .theme-toggle {
+  .theme-toggle,
+  .holiday-toggle {
     width: 36px;
     height: 36px;
   }

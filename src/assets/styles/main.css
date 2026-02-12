@@ -26,6 +26,13 @@
   --color-hover: rgba(0, 0, 0, 0.04);
   --color-selected-bg: #2563eb;
   --color-selected-text: #ffffff;
+
+  /* Праздники */
+  --color-holiday: #e879f9;
+  --color-holiday-official: #dc2626;
+  --color-holiday-active-bg: rgba(220, 38, 38, 0.08);
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-text: #f9fafb;
   
   /* Размеры */
   --sidebar-width: 200px;
@@ -64,6 +71,13 @@
   --color-hover: rgba(255, 255, 255, 0.06);
   --color-selected-bg: #3b82f6;
   --color-selected-text: #ffffff;
+
+  /* Праздники */
+  --color-holiday: #d946ef;
+  --color-holiday-official: #f87171;
+  --color-holiday-active-bg: rgba(248, 113, 113, 0.15);
+  --color-tooltip-bg: #e2e8f0;
+  --color-tooltip-text: #0f172a;
 }
 
 * {
@@ -135,6 +149,7 @@ input {
 
   .print-button,
   .theme-toggle,
+  .holiday-toggle,
   .header-actions {
     display: none !important;
   }
@@ -259,6 +274,28 @@ input {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+  }
+
+  /* Праздники при печати */
+  .day-cell.holiday-official .day-number {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+  }
+
+  .holiday-dot {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 3px !important;
+    height: 3px !important;
+    border-radius: 50% !important;
+    background-color: #dc2626 !important;
+    display: block !important;
+  }
+
+  .day-cell.holiday {
+    position: relative !important;
   }
 
   @page {
