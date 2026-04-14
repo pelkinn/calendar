@@ -1,12 +1,8 @@
-import {
-  createRouter,
-  createWebHistory,
-  type RouteRecordRaw,
-} from "vue-router";
+import { type RouteRecordRaw } from "vue-router";
 import { getCurrentYear } from "@/utils/date";
 import YearCalendarPage from "@/views/YearCalendarPage.vue";
 
-const routes: RouteRecordRaw[] = [
+export const routes: RouteRecordRaw[] = [
   {
     path: "/",
     redirect: () => `/year/${getCurrentYear()}`,
@@ -25,10 +21,3 @@ const routes: RouteRecordRaw[] = [
     redirect: () => `/year/${getCurrentYear()}`,
   },
 ];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
-
-export default router;

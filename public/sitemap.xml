@@ -1,33 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Главная — редирект на текущий год -->
   <url>
     <loc>https://calendar-online.online/</loc>
-    <changefreq>yearly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+    <lastmod>2026-01-01</lastmod>
+  </url>
+  <!-- Прошлые годы -->
+  <url>
+    <loc>https://calendar-online.online/year/2020</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+    <lastmod>2021-01-01</lastmod>
+  </url>
+  <url>
+    <loc>https://calendar-online.online/year/2021</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+    <lastmod>2022-01-01</lastmod>
+  </url>
+  <url>
+    <loc>https://calendar-online.online/year/2022</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+    <lastmod>2023-01-01</lastmod>
+  </url>
+  <url>
+    <loc>https://calendar-online.online/year/2023</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+    <lastmod>2024-01-01</lastmod>
   </url>
   <url>
     <loc>https://calendar-online.online/year/2024</loc>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
+    <lastmod>2025-01-01</lastmod>
   </url>
   <url>
     <loc>https://calendar-online.online/year/2025</loc>
-    <changefreq>yearly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <lastmod>2025-12-01</lastmod>
   </url>
+  <!-- Текущий год — наивысший приоритет, обновляется ежемесячно -->
   <url>
     <loc>https://calendar-online.online/year/2026</loc>
-    <changefreq>yearly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+    <lastmod>2026-04-14</lastmod>
   </url>
+  <!-- Будущие годы -->
   <url>
     <loc>https://calendar-online.online/year/2027</loc>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
+    <lastmod>2026-01-01</lastmod>
   </url>
   <url>
     <loc>https://calendar-online.online/year/2028</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
+    <lastmod>2026-01-01</lastmod>
   </url>
 </urlset>

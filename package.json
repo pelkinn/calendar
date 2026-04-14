@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "fetch-calendar": "node scripts/fetch-production-calendar.mjs",
-    "build": "npm run fetch-calendar && vue-tsc && vite build",
+    "build": "npm run fetch-calendar && vue-tsc && vite-ssg build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.2",
+    "vite-ssg": "^28.3.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },

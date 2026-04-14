@@ -59,7 +59,7 @@ useHead({
     {
       property: "og:url",
       content: computed(
-        () => `https://calendar.example.com/year/${props.year}`,
+        () => `https://calendar-online.online/year/${props.year}`,
       ),
     },
     // Twitter Card
@@ -81,7 +81,27 @@ useHead({
   link: [
     {
       rel: "canonical",
-      href: computed(() => `https://calendar.example.com/year/${props.year}`),
+      href: computed(() => `https://calendar-online.online/year/${props.year}`),
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: computed(() =>
+        JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: `Производственный календарь на ${props.year} год`,
+          description: `Производственный календарь на ${props.year} год. Праздники, переносы выходных, сокращённые рабочие дни России.`,
+          url: `https://calendar-online.online/year/${props.year}`,
+          inLanguage: "ru",
+          publisher: {
+            "@type": "Organization",
+            name: "Производственный календарь онлайн",
+            url: "https://calendar-online.online",
+          },
+        }),
+      ),
     },
   ],
 });
@@ -106,7 +126,9 @@ const calendarMonths = computed(() => {
 });
 
 // Заголовок
-const pageTitle = computed(() => `Календарь на ${props.year} год`);
+const pageTitle = computed(
+  () => `Производственный календарь на ${props.year} год`,
+);
 const pageTitleShort = computed(() => `${props.year} год`);
 
 // Печать
@@ -197,6 +219,38 @@ const holidaysTitle = computed(() =>
       </header>
 
       <MonthGrid :months="calendarMonths" />
+
+      <section class="seo-text">
+        <h2>Производственный календарь на {{ year }} год</h2>
+        <p>
+          Производственный календарь на {{ year }} год учитывает все официальные
+          государственные праздники России, переносы выходных дней и сокращённые
+          рабочие дни, утверждённые Правительством Российской Федерации.
+        </p>
+        <h3>Государственные праздники России</h3>
+        <p>
+          В {{ year }} году установлены следующие нерабочие праздничные дни: 1–8
+          января — Новогодние каникулы и Рождество Христово, 23 февраля — День
+          защитника Отечества, 8 марта — Международный женский день, 1 мая —
+          Праздник Весны и Труда, 9 мая — День Победы, 12 июня — День России,
+          4 ноября — День народного единства.
+        </p>
+        <h3>Переносы выходных и сокращённые дни</h3>
+        <p>
+          Когда праздничный день совпадает с выходным (субботой или
+          воскресеньем), выходной переносится на ближайший рабочий день.
+          Правительство России ежегодно публикует постановление с точными датами
+          переносов. Сокращённые рабочие дни (на 1 час) устанавливаются
+          накануне большинства государственных праздников.
+        </p>
+        <h3>Как пользоваться календарём</h3>
+        <p>
+          Выберите нужный год в боковой панели. Выходные и праздничные дни
+          отмечены красным цветом с точкой под числом. Сокращённые рабочие дни
+          выделены отдельным маркером. Для печати воспользуйтесь кнопкой
+          «Печать» — календарь оптимизирован для формата А4.
+        </p>
+      </section>
 
       <footer class="site-footer">
         <span>
@@ -517,6 +571,40 @@ const holidaysTitle = computed(() =>
 @media (max-width: 480px) {
   .calendar-title {
     font-size: 1rem;
+  }
+}
+
+/* SEO-текст */
+.seo-text {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 32px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.seo-text h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.seo-text h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 20px 0 8px;
+}
+
+.seo-text p {
+  margin: 0 0 8px;
+}
+
+@media (max-width: 768px) {
+  .seo-text {
+    padding: 24px 16px 4px;
   }
 }
 </style>
