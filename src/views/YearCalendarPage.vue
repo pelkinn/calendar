@@ -2,22 +2,41 @@
 import { computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useHead } from "@unhead/vue";
-import { buildYearCalendar, isValidYear, getCurrentYear } from "@/utils/date";
-import { MIN_YEAR, MAX_YEAR } from "@/types/calendar";
-import SidebarYearPicker from "@/components/SidebarYearPicker.vue";
+import {
+  buildYearCalendar,
+  isValidYear,
+  getCurrentYear,
+  generateYearRange,
+} from "@/utils/date";
+import {
+  MIN_YEAR,
+  MAX_YEAR,
+  SEO_YEAR_START,
+  SEO_YEAR_END,
+  isSeoYear,
+} from "@/types/calendar";
+import AppLayout from "@/components/AppLayout.vue";
+import YearSelect from "@/components/YearSelect.vue";
 import MonthGrid from "@/components/MonthGrid.vue";
-import ThemeIcon from "@/components/icons/ThemeIcon.vue";
 import PrintIcon from "@/components/icons/PrintIcon.vue";
 import HolidayIcon from "@/components/icons/HolidayIcon.vue";
-import { useTheme } from "@/composables/useTheme";
 import { useHolidays } from "@/composables/useHolidays";
+import { getCalendarYears } from "@/composables/useProductionCalendar";
+import { getYearMonths, sumWorkTime, formatHours } from "@/utils/workTime";
+import { TOOLS, toolPath } from "@/data/tools";
+import {
+  HOLIDAY_PAGES,
+  HOLIDAYS_BASE,
+  holidayPath,
+} from "@/data/holidayPages";
+import { MONTHS, monthPath, hasMonthPage } from "@/data/months";
+import { ARTICLES_BASE } from "@/data/articles";
 
 const props = defineProps<{
   year: number;
 }>();
 
 const router = useRouter();
-const { theme, toggleTheme } = useTheme();
 const { showHolidays, toggleHolidays } = useHolidays();
 
 // Динамические мета-теги для SEO
@@ -131,18 +150,38 @@ const pageTitle = computed(
 );
 const pageTitleShort = computed(() => `${props.year} год`);
 
+// Перелинковка: соседние годы и полный список пре-рендеренных годов
+const prevYear = computed(() =>
+  isSeoYear(props.year - 1) ? props.year - 1 : null,
+);
+const nextYear = computed(() =>
+  isSeoYear(props.year + 1) ? props.year + 1 : null,
+);
+const seoYears = computed(() =>
+  generateYearRange(SEO_YEAR_START, SEO_YEAR_END),
+);
+// Норма рабочего времени есть только там, где загружен производственный календарь
+const hasNormPage = computed(() => getCalendarYears().includes(props.year));
+
+/**
+ * Сводка года для шапки. Считается по тем же данным, что и страница норм,
+ * поэтому существует только для годов с производственным календарём.
+ */
+const summary = computed(() => {
+  if (!hasNormPage.value) return null;
+  const total = sumWorkTime(getYearMonths(props.year));
+  return {
+    workDays: total.workDays,
+    restDays: total.restDays,
+    hours: formatHours(total.hours[40]),
+    shortenedDays: total.shortenedDays,
+  };
+});
+
 // Печать
 const handlePrint = () => {
   window.print();
 };
-
-// Тема
-const isDark = computed(() => theme.value === "dark");
-const themeTitle = computed(() =>
-  theme.value === "light"
-    ? "Переключить на тёмную тему"
-    : "Переключить на светлую тему",
-);
 
 const holidaysTitle = computed(() =>
   showHolidays.value ? "Скрыть праздники" : "Показать праздники",
@@ -150,218 +189,401 @@ const holidaysTitle = computed(() =>
 </script>
 
 <template>
-  <div class="calendar-page">
-    <SidebarYearPicker :current-year="year" />
+  <AppLayout width="wide">
+    <template #header-actions>
+      <YearSelect :current-year="year" />
+      <button
+        class="holiday-toggle"
+        :class="{ active: showHolidays }"
+        @click="toggleHolidays"
+        :title="holidaysTitle"
+        aria-label="Переключить отображение праздников"
+      >
+        <HolidayIcon :active="showHolidays" />
+      </button>
+      <button
+        class="print-button"
+        @click="handlePrint"
+        title="Печать календаря"
+      >
+        <PrintIcon />
+        <span>Печать</span>
+      </button>
+    </template>
 
-    <main class="calendar-layout">
-      <header class="calendar-header">
-        <h1 class="calendar-title">
-          <span class="title-full">{{ pageTitle }}</span>
-          <span class="title-short">{{ pageTitleShort }}</span>
-        </h1>
+    <template #page-header>
+      <header class="hero">
+        <div class="hero__glow" aria-hidden="true"></div>
+        <div class="hero__grid" aria-hidden="true"></div>
 
-        <div class="calendar-legend">
-          <div class="legend-item">
-            <span class="legend-sample legend-sample--holiday">
-              <span class="legend-number">8</span>
-              <span class="legend-dot legend-dot--holiday"></span>
-            </span>
-            <span class="legend-label">Выходной / праздник</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-sample legend-sample--shortened">
-              <span class="legend-number legend-number--shortened">31</span>
-              <span class="legend-dot legend-dot--shortened"></span>
-            </span>
-            <span class="legend-label">Сокращённый день</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-sample legend-sample--today">
-              <span class="legend-number">12</span>
-            </span>
-            <span class="legend-label">Сегодня</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-sample legend-sample--selected">
-              <span class="legend-number">5</span>
-            </span>
-            <span class="legend-label">Выбранная дата</span>
-          </div>
-        </div>
+        <div class="hero__inner">
+          <p class="hero__eyebrow">
+            <i aria-hidden="true"></i>
+            По постановлениям Правительства России
+          </p>
+          <h1 class="hero__title">
+            <span class="title-full">{{ pageTitle }}</span>
+            <span class="title-short">Календарь на {{ pageTitleShort }}</span>
+          </h1>
+          <p class="hero__lead">
+            Праздники, переносы выходных и сокращённые дни. Норма часов
+            посчитана по методике Минтруда.
+          </p>
 
-        <div class="header-actions">
-          <button
-            class="holiday-toggle"
-            :class="{ active: showHolidays }"
-            @click="toggleHolidays"
-            :title="holidaysTitle"
-            aria-label="Переключить отображение праздников"
-          >
-            <HolidayIcon :active="showHolidays" />
-          </button>
-          <button
-            class="theme-toggle"
-            @click="toggleTheme"
-            :title="themeTitle"
-            aria-label="Переключить тему"
-          >
-            <ThemeIcon :is-dark="isDark" />
-          </button>
-          <button
-            class="print-button"
-            @click="handlePrint"
-            title="Печать календаря"
-          >
-            <PrintIcon />
-            <span>Печать</span>
-          </button>
+          <div v-if="summary" class="stats">
+            <div class="stat stat--work">
+              <span class="stat__value">{{ summary.workDays }}</span>
+              <span class="stat__label">рабочих дней</span>
+            </div>
+            <div class="stat stat--rest">
+              <span class="stat__value">{{ summary.restDays }}</span>
+              <span class="stat__label">выходных и праздничных</span>
+            </div>
+            <div class="stat stat--hours">
+              <span class="stat__value">
+                {{ summary.hours }}<small>ч</small>
+              </span>
+              <span class="stat__label">норма при 40-часовой неделе</span>
+            </div>
+            <div class="stat stat--short">
+              <span class="stat__value">{{ summary.shortenedDays }}</span>
+              <span class="stat__label">сокращённых дня</span>
+            </div>
+          </div>
         </div>
       </header>
+    </template>
 
-      <MonthGrid :months="calendarMonths" />
-
-      <section class="seo-text">
-        <h2>Производственный календарь на {{ year }} год</h2>
-        <p>
-          Производственный календарь на {{ year }} год учитывает все официальные
-          государственные праздники России, переносы выходных дней и сокращённые
-          рабочие дни, утверждённые Правительством Российской Федерации.
-        </p>
-        <h3>Государственные праздники России</h3>
-        <p>
-          В {{ year }} году установлены следующие нерабочие праздничные дни: 1–8
-          января — Новогодние каникулы и Рождество Христово, 23 февраля — День
-          защитника Отечества, 8 марта — Международный женский день, 1 мая —
-          Праздник Весны и Труда, 9 мая — День Победы, 12 июня — День России,
-          4 ноября — День народного единства.
-        </p>
-        <h3>Переносы выходных и сокращённые дни</h3>
-        <p>
-          Когда праздничный день совпадает с выходным (субботой или
-          воскресеньем), выходной переносится на ближайший рабочий день.
-          Правительство России ежегодно публикует постановление с точными датами
-          переносов. Сокращённые рабочие дни (на 1 час) устанавливаются
-          накануне большинства государственных праздников.
-        </p>
-        <h3>Как пользоваться календарём</h3>
-        <p>
-          Выберите нужный год в боковой панели. Выходные и праздничные дни
-          отмечены красным цветом с точкой под числом. Сокращённые рабочие дни
-          выделены отдельным маркером. Для печати воспользуйтесь кнопкой
-          «Печать» — календарь оптимизирован для формата А4.
-        </p>
-      </section>
-
-      <footer class="site-footer">
-        <span>
-          Разработка —
-          <a
-            href="https://t.me/pelkin"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Александр Перепелкин
-          </a>
+    <div class="grid-head">
+      <h2 class="grid-head__title">Календарь на год</h2>
+      <div class="calendar-legend">
+        <span class="legend-item legend-item--holiday">
+          <i class="legend-sample">8</i>
+          Выходной и праздник
         </span>
-      </footer>
-    </main>
-  </div>
+        <span class="legend-item legend-item--shortened">
+          <i class="legend-sample">30</i>
+          Сокращённый
+        </span>
+        <span class="legend-item legend-item--today">
+          <i class="legend-sample">12</i>
+          Сегодня
+        </span>
+        <span class="legend-item legend-item--selected">
+          <i class="legend-sample">5</i>
+          Выбранная дата
+        </span>
+      </div>
+    </div>
+
+    <MonthGrid :months="calendarMonths" />
+
+    <!-- Перелинковка: списки по разделам вместо ковра одинаковых чипов -->
+    <nav class="year-nav" aria-label="Разделы и календари по годам">
+      <div class="year-nav__siblings">
+        <RouterLink
+          v-if="prevYear"
+          class="year-nav__sibling"
+          :to="`/year/${prevYear}`"
+        >
+          <span class="year-nav__arrow" aria-hidden="true">←</span>
+          Календарь на {{ prevYear }} год
+        </RouterLink>
+        <span v-else></span>
+        <RouterLink
+          v-if="nextYear"
+          class="year-nav__sibling year-nav__sibling--next"
+          :to="`/year/${nextYear}`"
+        >
+          Календарь на {{ nextYear }} год
+          <span class="year-nav__arrow" aria-hidden="true">→</span>
+        </RouterLink>
+      </div>
+
+      <div class="year-nav__cols">
+        <div class="year-nav__col reveal">
+          <h2 class="year-nav__title">Норма времени</h2>
+          <ul class="year-nav__list">
+            <li v-if="hasNormPage">
+              <RouterLink class="year-nav__link" :to="`/norma/${year}`">
+                Норма на {{ year }} год
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink class="year-nav__link" to="/norma">
+                Норма по всем годам
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink class="year-nav__link" :to="ARTICLES_BASE">
+                Статьи о рабочем времени
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
+
+        <div class="year-nav__col reveal">
+          <h2 class="year-nav__title">Праздники</h2>
+          <ul class="year-nav__list">
+            <li>
+              <RouterLink class="year-nav__link" :to="HOLIDAYS_BASE">
+                Все праздники России
+              </RouterLink>
+            </li>
+            <li v-for="holiday in HOLIDAY_PAGES" :key="holiday.slug">
+              <RouterLink class="year-nav__link" :to="holidayPath(holiday)">
+                {{ holiday.name }}
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
+
+        <div class="year-nav__col reveal">
+          <h2 class="year-nav__title">Калькуляторы</h2>
+          <ul class="year-nav__list">
+            <li v-for="tool in TOOLS" :key="tool.slug">
+              <RouterLink class="year-nav__link" :to="toolPath(tool)">
+                {{ tool.title }}
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="hasMonthPage(year)" class="year-nav__col reveal">
+          <h2 class="year-nav__title">Месяцы {{ year }} года</h2>
+          <ul class="year-nav__list year-nav__list--split">
+            <li v-for="month in MONTHS" :key="month.slug">
+              <RouterLink class="year-nav__link" :to="monthPath(year, month)">
+                {{ month.nominative }}
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="year-strip">
+        <span class="year-strip__label">Другие годы</span>
+        <div class="year-strip__list">
+          <RouterLink
+            v-for="y in seoYears"
+            :key="y"
+            class="year-strip__link"
+            :class="{ 'is-current': y === year }"
+            :to="`/year/${y}`"
+            :title="`Производственный календарь на ${y} год`"
+          >
+            {{ y }}
+          </RouterLink>
+        </div>
+      </div>
+    </nav>
+
+    <section class="seo-text">
+      <h2>Производственный календарь на {{ year }} год</h2>
+      <p>
+        Производственный календарь на {{ year }} год учитывает все официальные
+        государственные праздники России, переносы выходных дней и сокращённые
+        рабочие дни, утверждённые Правительством Российской Федерации.
+      </p>
+      <h3>Государственные праздники России</h3>
+      <p>
+        В {{ year }} году установлены следующие нерабочие праздничные дни: 1–8
+        января — Новогодние каникулы и Рождество Христово, 23 февраля — День
+        защитника Отечества, 8 марта — Международный женский день, 1 мая —
+        Праздник Весны и Труда, 9 мая — День Победы, 12 июня — День России,
+        4 ноября — День народного единства.
+      </p>
+      <h3>Переносы выходных и сокращённые дни</h3>
+      <p>
+        Когда праздничный день совпадает с выходным (субботой или
+        воскресеньем), выходной переносится на ближайший рабочий день.
+        Правительство России ежегодно публикует постановление с точными датами
+        переносов. Сокращённые рабочие дни (на 1 час) устанавливаются
+        накануне большинства государственных праздников.
+      </p>
+      <h3>Как пользоваться календарём</h3>
+      <p>
+        Нужный год выбирается в шапке сайта — доступны годы с 1900 по 2100.
+        Выходные и праздничные дни выделены красным, сокращённые
+        предпраздничные — янтарным с чертой под числом. Наведите курсор на
+        дату, чтобы увидеть название праздника. Для печати воспользуйтесь
+        кнопкой «Печать» — календарь оптимизирован для формата А4.
+      </p>
+    </section>
+  </AppLayout>
 </template>
 
 <style scoped>
-.calendar-page {
-  min-height: 100vh;
-  background-color: var(--color-bg-secondary);
-}
-
-.calendar-layout {
-  margin-left: var(--sidebar-width);
-  min-height: 100vh;
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 32px;
-  background-color: var(--color-bg);
+/* ===== Шапка страницы: сводка года ===== */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 52px 32px 38px;
   border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  background-color: var(--color-bg);
 }
 
-.calendar-title {
-  font-size: 1.5rem;
+.hero__glow {
+  position: absolute;
+  inset: -40% -10% auto -10%;
+  height: 320px;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 100% at 22% 0%,
+    var(--color-primary-subtle),
+    transparent 70%
+  );
+}
+
+/* Уезжающая сетка: единственное фоновое движение на странице */
+.hero__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(70% 90% at 30% 0%, #000, transparent 72%);
+  mask-image: radial-gradient(70% 90% at 30% 0%, #000, transparent 72%);
+  animation: hero-drift 26s linear infinite;
+}
+
+@keyframes hero-drift {
+  to {
+    background-position:
+      56px 56px,
+      56px 56px;
+  }
+}
+
+.hero__inner {
+  position: relative;
+}
+
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.hero__eyebrow i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  animation: hero-pulse 2.6s var(--ease) infinite;
+}
+
+@keyframes hero-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+.hero__title {
+  font-size: clamp(1.75rem, 3.4vw, 2.625rem);
   font-weight: 600;
+  letter-spacing: -0.035em;
   color: var(--color-text);
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .title-short {
   display: none;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.holiday-toggle,
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg);
+.hero__lead {
   color: var(--color-text-muted);
-  transition: all 0.15s ease;
+  margin: 12px 0 0;
+  max-width: 52ch;
+  font-size: 0.9375rem;
 }
 
-.holiday-toggle:hover,
-.theme-toggle:hover {
-  background-color: var(--color-hover);
-  color: var(--color-text);
-  border-color: var(--color-border);
+/* Сводка: числа разделены линиями, без карточек */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 36px;
+  border-top: 1px solid var(--color-border);
 }
 
-.holiday-toggle.active {
-  color: var(--color-holiday-official);
-  border-color: var(--color-holiday-official);
-  background-color: var(--color-holiday-active-bg);
+.stat {
+  padding: 20px 22px 0;
+  border-right: 1px solid var(--color-border);
 }
 
-.print-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-size: 0.875rem;
+.stat:first-child {
+  padding-left: 0;
+}
+
+.stat:last-child {
+  border-right: 0;
+}
+
+.stat__value {
+  display: block;
+  font-size: clamp(1.875rem, 3.6vw, 2.625rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__value small {
+  font-size: 0.45em;
   font-weight: 500;
-  transition: all 0.15s ease;
+  color: var(--color-text-muted);
+  letter-spacing: -0.01em;
+  margin-left: 3px;
 }
 
-.print-button:hover {
-  background-color: var(--color-hover);
-  border-color: var(--color-border);
+.stat__label {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  margin-top: 9px;
 }
 
-/* Легенда */
-.calendar-legend {
+.stat--rest .stat__value {
+  color: var(--color-weekend);
+}
+
+.stat--hours .stat__value {
+  color: var(--color-primary);
+}
+
+.stat--short .stat__value {
+  color: var(--color-holiday);
+}
+
+/* ===== Заголовок сетки и легенда ===== */
+.grid-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 36px 32px 18px;
+}
+
+.grid-head__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.calendar-legend {
+  margin-left: auto;
+  display: flex;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -369,148 +591,339 @@ const holidaysTitle = computed(() =>
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  font-size: 0.78125rem;
+  color: var(--color-text-muted);
 }
 
 .legend-sample {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-}
-
-.legend-number {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.legend-sample--holiday .legend-number {
-  color: var(--color-holiday-official);
-}
-
-.legend-dot--holiday {
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--color-holiday-official);
-}
-
-.legend-number--shortened {
-  color: var(--color-weekday);
-}
-
-.legend-dot--shortened {
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 2px;
-  border-radius: 1px;
-  background-color: var(--color-holiday);
-}
-
-.legend-sample--today .legend-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background-color: var(--color-today-bg);
-  border: 2px solid var(--color-today-border);
-  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
   font-weight: 600;
-  color: var(--color-text);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
 }
 
-.legend-sample--selected .legend-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+.legend-item--holiday .legend-sample {
+  color: var(--color-holiday-official);
+  background-color: var(--color-holiday-active-bg);
+}
+
+.legend-item--shortened .legend-sample {
+  color: var(--color-holiday);
+  background-color: var(--color-shortened-bg);
+  box-shadow: inset 0 -2px 0 var(--color-holiday);
+}
+
+.legend-item--today .legend-sample {
+  background-color: var(--color-today-bg);
+  color: var(--color-today-text);
+}
+
+.legend-item--selected .legend-sample {
   background-color: var(--color-selected-bg);
   color: var(--color-selected-text);
-  border-radius: 50%;
+}
+
+/* ===== Перелинковка ===== */
+.year-nav {
+  padding: 40px 32px 0;
+  margin-top: 40px;
+  border-top: 1px solid var(--color-border);
+}
+
+.year-nav__siblings {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.year-nav__sibling {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    border-color 0.16s var(--ease),
+    transform 0.16s var(--ease);
+}
+
+.year-nav__sibling:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+.year-nav__arrow {
+  color: var(--color-text-faint);
+  transition: transform 0.18s var(--ease);
+}
+
+.year-nav__sibling:hover .year-nav__arrow {
+  transform: translateX(-3px);
+}
+
+.year-nav__sibling--next:hover .year-nav__arrow {
+  transform: translateX(3px);
+}
+
+.year-nav__cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.year-nav__title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin: 0 0 14px;
+}
+
+.year-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.year-nav__list--split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
+}
+
+/* Стрелка выезжает при наведении — подсказка, что это переход, а не тег */
+.year-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    color 0.16s var(--ease),
+    padding-left 0.18s var(--ease);
+}
+
+.year-nav__link::after {
+  content: "→";
+  color: var(--color-primary);
+  opacity: 0;
+  transform: translateX(-5px);
+  transition:
+    opacity 0.18s var(--ease),
+    transform 0.18s var(--ease);
+}
+
+.year-nav__link:hover {
+  color: var(--color-primary);
+  padding-left: 5px;
+}
+
+.year-nav__link:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.year-strip {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 34px;
+}
+
+.year-strip__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.year-strip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.year-strip__link {
+  padding: 5px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition:
+    color 0.16s var(--ease),
+    border-color 0.16s var(--ease);
+}
+
+.year-strip__link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.year-strip__link.is-current {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
   font-weight: 600;
 }
 
-.legend-label {
-  font-size: 0.8125rem;
+/* ===== Кнопки в шапке сайта ===== */
+.holiday-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: transparent;
   color: var(--color-text-muted);
-}
-
-/* Футер */
-.site-footer {
-  padding: 24px 32px;
-  text-align: center;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.site-footer a {
-  color: var(--color-text-muted);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+    color 0.16s var(--ease),
+    border-color 0.16s var(--ease),
+    transform 0.16s var(--ease);
 }
 
-.site-footer a:hover {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+.holiday-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
 }
 
-/* Адаптив: планшет */
-@media (max-width: 1400px) {
-  .calendar-layout {
-    margin-left: 180px;
+/* Тумблер включён по умолчанию. Состояние читается формой звезды
+   (залита или контур), поэтому сигнальный цвет тут не нужен */
+.holiday-toggle.active {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.print-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  transition:
+    border-color 0.16s var(--ease),
+    transform 0.16s var(--ease);
+}
+
+.print-button:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+/* ===== SEO-текст ===== */
+.seo-text {
+  padding: 44px 32px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+.seo-text h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.seo-text h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 22px 0 8px;
+}
+
+.seo-text p {
+  margin: 0 0 8px;
+  max-width: 76ch;
+}
+
+/* ===== Печать ===== */
+@media print {
+  .hero__glow,
+  .hero__grid,
+  .year-nav,
+  .grid-head {
+    display: none;
   }
 
-  .calendar-header {
-    flex-wrap: wrap;
-    padding: 12px 24px;
-    gap: 8px 12px;
-  }
-
-  .calendar-title {
-    font-size: 1.25rem;
-  }
-
-  .header-actions {
-    margin-left: auto;
-  }
-
-  .calendar-legend {
-    width: 100%;
-    order: 3;
-    gap: 12px;
-    padding-top: 6px;
-    border-top: 1px solid var(--color-border);
+  .hero {
+    padding: 0 0 12px;
+    border-bottom: 0;
   }
 }
 
-/* Адаптив: мобильные */
+/* ===== Адаптив ===== */
+@media (max-width: 1180px) {
+  .year-nav__cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 34px 24px 26px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat {
+    padding: 18px 18px 18px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .stat:nth-child(odd) {
+    padding-left: 0;
+  }
+
+  .stat:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .grid-head {
+    padding: 26px 16px 14px;
+  }
+
+  .year-nav,
+  .seo-text {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
 @media (max-width: 768px) {
-  .calendar-layout {
-    margin-left: 0;
-  }
-
-  .calendar-header {
-    padding: 12px 16px;
-    padding-left: 60px; /* Место для кнопки меню */
-  }
-
-  .calendar-title {
-    font-size: 1.125rem;
+  .hero {
+    padding: 28px 16px 22px;
   }
 
   .title-full {
@@ -521,90 +934,33 @@ const holidaysTitle = computed(() =>
     display: inline;
   }
 
-  .print-button {
-    padding: 8px 14px;
-    font-size: 0.8125rem;
-  }
-
   .print-button span {
     display: none;
   }
 
-  .theme-toggle,
-  .holiday-toggle {
-    width: 36px;
-    height: 36px;
+  .print-button {
+    padding: 0 11px;
+  }
+
+  .year-nav__siblings {
+    flex-direction: column;
+  }
+
+  .year-nav__sibling {
+    justify-content: center;
   }
 
   .calendar-legend {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 12px;
-  }
-
-  .legend-item {
-    gap: 4px;
-  }
-
-  .legend-label {
-    font-size: 0.6875rem;
-  }
-
-  .legend-sample {
-    width: 20px;
-    height: 20px;
-  }
-
-  .legend-number {
-    font-size: 0.6875rem;
-  }
-
-  .legend-sample--today .legend-number,
-  .legend-sample--selected .legend-number {
-    width: 20px;
-    height: 20px;
-    font-size: 0.6875rem;
+    margin-left: 0;
+    width: 100%;
+    gap: 10px 14px;
   }
 }
 
-/* Адаптив: узкие мобильные */
-@media (max-width: 480px) {
-  .calendar-title {
-    font-size: 1rem;
-  }
-}
-
-/* SEO-текст */
-.seo-text {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 32px 32px 8px;
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  line-height: 1.7;
-}
-
-.seo-text h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0 0 12px;
-}
-
-.seo-text h3 {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 20px 0 8px;
-}
-
-.seo-text p {
-  margin: 0 0 8px;
-}
-
-@media (max-width: 768px) {
-  .seo-text {
-    padding: 24px 16px 4px;
+@media (max-width: 560px) {
+  .year-nav__cols {
+    grid-template-columns: 1fr;
+    gap: 26px;
   }
 }
 </style>

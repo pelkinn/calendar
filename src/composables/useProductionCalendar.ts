@@ -4,7 +4,7 @@ import calendarJson from "@/data/production-calendar.json";
 /**
  * Данные производственного календаря для одного месяца
  */
-interface MonthCalendarData {
+export interface MonthCalendarData {
   /** Нерабочие дни (праздники + выходные + перенесённые выходные) */
   nonWorkingDays: Set<number>;
   /** Перенесённые выходные (подмножество nonWorkingDays, для тултипов) */
@@ -89,6 +89,27 @@ function getYearData(year: number): ProductionCalendarYear | null {
   const result: ProductionCalendarYear = { months };
   parsedCache.set(year, result);
   return result;
+}
+
+/**
+ * Данные месяца по производственному календарю — вне контекста компонента.
+ * Нужны для расчёта норм рабочего времени.
+ */
+export function getMonthCalendarData(
+  year: number,
+  monthIndex: number,
+): MonthCalendarData | null {
+  return getYearData(year)?.months.get(monthIndex) ?? null;
+}
+
+/**
+ * Годы, для которых загружен производственный календарь
+ * (только на них можно считать нормы рабочего времени)
+ */
+export function getCalendarYears(): number[] {
+  return Object.keys(calendarJson as Record<string, unknown>)
+    .map(Number)
+    .sort((a, b) => a - b);
 }
 
 /**

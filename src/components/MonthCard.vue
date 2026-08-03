@@ -115,6 +115,20 @@ const getTooltip = (cell: MonthCell): string | undefined => {
   return fixedHoliday?.name;
 };
 
+/**
+ * Сколько в месяце рабочих дней — по тем же правилам, что раскрашены ячейки,
+ * поэтому цифра всегда сходится с тем, что человек видит в сетке.
+ */
+const workDaysCount = computed(() => {
+  let count = 0;
+  for (const week of props.month.matrix) {
+    for (const cell of week) {
+      if (cell.day !== null && isEffectivelyWorking(cell)) count++;
+    }
+  }
+  return count;
+});
+
 const handleDayClick = (cell: MonthCell) => {
   if (cell.day !== null && cell.date) {
     toggleDate(cell.date);
@@ -124,7 +138,10 @@ const handleDayClick = (cell: MonthCell) => {
 
 <template>
   <article class="month-card">
-    <h3 class="month-title">{{ month.name }}</h3>
+    <div class="month-head">
+      <h3 class="month-title">{{ month.name }}</h3>
+      <span class="month-count">{{ workDaysCount }} раб.</span>
+    </div>
 
     <table class="month-table">
       <thead>
@@ -165,8 +182,6 @@ const handleDayClick = (cell: MonthCell) => {
             <span v-if="cell.day !== null" class="day-number">
               {{ cell.day }}
             </span>
-            <span v-if="isHolidayCell(cell)" class="holiday-dot"></span>
-            <span v-if="isShortenedCell(cell)" class="shortened-dot"></span>
           </td>
         </tr>
       </tbody>
@@ -179,156 +194,182 @@ const handleDayClick = (cell: MonthCell) => {
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: 0 1px 2px var(--color-shadow);
-  transition: box-shadow 0.2s ease;
+  padding: 16px 15px 13px;
+  transition:
+    border-color 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
 
 .month-card:hover {
-  box-shadow: 0 2px 8px var(--color-shadow-lg);
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .month-title {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  text-align: center;
-  margin-bottom: 12px;
   color: var(--color-text);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+}
+
+.month-count {
+  font-size: 0.71875rem;
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .month-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 1px;
   table-layout: fixed;
-}
-
-.weekdays-row {
-  border-bottom: 1px solid var(--color-border);
+  font-variant-numeric: tabular-nums;
 }
 
 .weekday-header {
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: 0.625rem;
+  font-weight: 600;
   text-align: center;
-  padding: 6px 2px;
-  color: var(--color-text-muted);
+  padding: 0 0 5px;
+  color: var(--color-text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .weekday-header.weekend {
   color: var(--color-weekend);
-  opacity: 0.85;
-}
-
-.week-row {
-  height: 28px;
+  opacity: 0.72;
 }
 
 .day-cell {
+  position: relative;
   text-align: center;
   vertical-align: middle;
-  padding: 2px;
-  font-size: 0.8125rem;
+  padding: 0;
+  font-size: 0.78125rem;
 }
 
 .day-cell.empty {
   background: transparent;
 }
 
-.day-cell.weekday {
-  color: var(--color-weekday);
-}
-
-.day-cell.weekend {
-  color: var(--color-weekend);
-}
-
-.day-cell.today .day-number {
-  display: inline-flex;
+/* Номер — сам по себе интерактивная площадка, поэтому масштабируется он,
+   а не ячейка таблицы: иначе прыгает вся строка */
+.day-number {
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background-color: var(--color-today-bg);
-  border: 2px solid var(--color-today-border);
-  border-radius: 50%;
-  font-weight: 600;
-}
-
-.day-number {
-  display: inline-block;
-  min-width: 18px;
+  aspect-ratio: 1;
+  width: 100%;
+  /* Иначе на широкой карточке ячейки растягиваются и числа теряют строй */
+  max-width: 34px;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  color: var(--color-weekday);
+  transition:
+    background-color 0.13s var(--ease),
+    color 0.13s var(--ease),
+    transform 0.13s var(--ease);
 }
 
 .day-cell.clickable {
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease;
 }
 
-.day-cell.clickable:hover {
-  background-color: var(--color-hover);
+.day-cell.clickable:hover .day-number {
+  background-color: var(--color-bg-secondary);
+  transform: scale(1.12);
+}
+
+[data-theme="dark"] .day-cell.clickable:hover .day-number {
+  background-color: var(--color-border);
+}
+
+.day-cell.weekend .day-number {
+  color: var(--color-weekend);
+  font-weight: 500;
+}
+
+/* Сегодня — единственная сплошная заливка акцентом на странице */
+.day-cell.today .day-number {
+  background-color: var(--color-today-bg);
+  color: var(--color-today-text);
+  font-weight: 600;
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+
+.day-cell.today.clickable:hover .day-number {
+  background-color: var(--color-today-bg);
+  color: var(--color-today-text);
 }
 
 .day-cell.selected .day-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
   background-color: var(--color-selected-bg);
   color: var(--color-selected-text);
-  border-radius: 50%;
   font-weight: 600;
 }
 
-/* Если выбран сегодняшний день — комбинируем стили */
+.day-cell.selected.clickable:hover .day-number {
+  background-color: var(--color-selected-bg);
+}
+
+/* Выбранное «сегодня» остаётся сегодня — акцентная заливка сильнее */
 .day-cell.today.selected .day-number {
   background-color: var(--color-today-bg);
-  border: 2px solid var(--color-today-border);
-  color: var(--color-text);
+  color: var(--color-today-text);
 }
 
-/* === Производственный календарь === */
-
-/* Праздничный нерабочий день на будний (не выходной) */
-.day-cell.production-holiday {
-  position: relative;
-}
+/* === Производственный календарь ===
+   Точки под числом в сетке 26px не читались, поэтому состояние несёт
+   заливка ячейки: праздники и сокращённые дни видно с одного взгляда. */
 
 .day-cell.production-holiday .day-number {
+  background-color: var(--color-holiday-active-bg);
   color: var(--color-holiday-official);
-  font-weight: 700;
+  font-weight: 600;
 }
 
-/* Точка-индикатор под праздничным днём */
-.holiday-dot {
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--color-holiday-official);
+.day-cell.production-holiday.clickable:hover .day-number {
+  background-color: var(--color-holiday-active-bg);
+  filter: brightness(0.96);
 }
 
-/* Сокращённый рабочий день (предпраздничный) */
-.day-cell.shortened-day {
-  position: relative;
+[data-theme="dark"] .day-cell.production-holiday.clickable:hover .day-number {
+  filter: brightness(1.35);
 }
 
-.shortened-dot {
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 2px;
-  border-radius: 1px;
-  background-color: var(--color-holiday);
+/* Сокращённый день: заливка плюс черта снизу — чтобы состояние читалось
+   не только цветом */
+.day-cell.shortened-day .day-number {
+  background-color: var(--color-shortened-bg);
+  color: var(--color-holiday);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--color-holiday);
+}
+
+.day-cell.shortened-day.clickable:hover .day-number {
+  background-color: var(--color-shortened-bg);
+}
+
+/* Сегодня перекрывает всё: это единственная сплошная заливка */
+.day-cell.today .day-number,
+.day-cell.today.production-holiday .day-number,
+.day-cell.today.shortened-day .day-number {
+  background-color: var(--color-today-bg);
+  color: var(--color-today-text);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 /* Тултип при наведении */
@@ -339,10 +380,10 @@ const handleDayClick = (cell: MonthCell) => {
 .day-cell[data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 4px 8px;
+  padding: 5px 9px;
   background-color: var(--color-tooltip-bg);
   color: var(--color-tooltip-text);
   font-size: 0.6875rem;
@@ -350,7 +391,7 @@ const handleDayClick = (cell: MonthCell) => {
   line-height: 1.3;
   white-space: nowrap;
   border-radius: var(--radius-sm);
-  box-shadow: 0 2px 8px var(--color-shadow-lg);
+  box-shadow: var(--shadow-md);
   z-index: 100;
   pointer-events: none;
 }
@@ -358,7 +399,7 @@ const handleDayClick = (cell: MonthCell) => {
 .day-cell[data-tooltip]:hover::before {
   content: "";
   position: absolute;
-  bottom: calc(100% + 0px);
+  bottom: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;

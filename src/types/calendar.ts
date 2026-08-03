@@ -42,3 +42,16 @@ export const MAX_YEAR = 2100;
  */
 export const SIDEBAR_YEAR_START = 1950;
 export const SIDEBAR_YEAR_END = 2050;
+
+/**
+ * Диапазон годов, которые пре-рендерятся в статику и попадают в sitemap.
+ * Только эти годы отдаются как реальные HTML-страницы, поэтому только на них
+ * ставятся настоящие <a href> — чтобы краулер не ходил по 404.
+ */
+export const SEO_YEAR_START = 2015;
+export const SEO_YEAR_END = 2027;
+
+/** Год входит в пре-рендеренный SEO-диапазон */
+export function isSeoYear(year: number): boolean {
+  return year >= SEO_YEAR_START && year <= SEO_YEAR_END;
+}

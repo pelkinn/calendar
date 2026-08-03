@@ -8,6 +8,9 @@ const showHolidays = ref<boolean>(loadShowHolidays());
 function loadShowHolidays(): boolean {
   try {
     const saved = localStorage.getItem("show-holidays");
+    // Первый визит — праздники включены: иначе сводка года (118 выходных)
+    // расходится с сеткой, где красными были бы только Сб и Вс
+    if (saved === null) return true;
     return saved === "true";
   } catch {
     return true;

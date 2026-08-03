@@ -16,8 +16,12 @@ const OUTPUT_PATH = resolve(__dirname, "../src/data/production-calendar.json");
 
 const BASE_URL = "https://xmlcalendar.ru/data/ru";
 const currentYear = new Date().getFullYear();
-const START_YEAR = currentYear - 2; // два года назад
-const END_YEAR = currentYear + 1; // следующий год
+// Тянем весь SEO-диапазон: на этих годах строятся страницы норм рабочего
+// времени, а без реальных переносов выходных цифры будут неверными.
+// Календарь на следующий год утверждается постановлением осенью — до этого
+// момента данных может не быть, это нормально.
+const START_YEAR = 2015;
+const END_YEAR = currentYear + 1;
 
 /**
  * Загружает календарь для одного года
