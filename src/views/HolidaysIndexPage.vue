@@ -5,7 +5,6 @@ import AppLayout from "@/components/AppLayout.vue";
 import { HOLIDAY_PAGES, holidayPath } from "@/data/holidayPages";
 import { getCurrentYear } from "@/utils/date";
 import { getRestPeriod, plural } from "@/utils/dateCalc";
-import { TOOLS, toolPath } from "@/data/tools";
 
 const currentYear = getCurrentYear();
 
@@ -150,9 +149,6 @@ useHead({
           <RouterLink :to="`/norma/${currentYear}`">
             Норма рабочего времени
           </RouterLink>
-        </li>
-        <li v-for="tool in TOOLS" :key="tool.slug">
-          <RouterLink :to="toolPath(tool)">{{ tool.title }}</RouterLink>
         </li>
       </ul>
     </nav>

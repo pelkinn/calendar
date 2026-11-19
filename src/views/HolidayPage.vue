@@ -12,7 +12,6 @@ import {
 import { getCalendarYears } from "@/composables/useProductionCalendar";
 import { getCurrentYear } from "@/utils/date";
 import { getRestPeriod, plural } from "@/utils/dateCalc";
-import { TOOLS, toolPath } from "@/data/tools";
 
 const props = defineProps<{
   page: HolidayPage;
@@ -201,9 +200,6 @@ const crumbs = computed(() => [
           <RouterLink :to="`/norma/${currentYear}`">
             Норма рабочего времени
           </RouterLink>
-        </li>
-        <li v-for="tool in TOOLS" :key="tool.slug">
-          <RouterLink :to="toolPath(tool)">{{ tool.title }}</RouterLink>
         </li>
       </ul>
     </nav>

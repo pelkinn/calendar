@@ -2,9 +2,7 @@
 import { RouterLink } from "vue-router";
 import { getCurrentYear } from "@/utils/date";
 import { isSeoYear } from "@/types/calendar";
-import { TOOLS, toolPath } from "@/data/tools";
 import { HOLIDAY_PAGES, HOLIDAYS_BASE, holidayPath } from "@/data/holidayPages";
-import { ARTICLES, ARTICLES_BASE, articlePath } from "@/data/articles";
 
 const currentYear = getCurrentYear();
 const nextYear = currentYear + 1;
@@ -52,29 +50,6 @@ const hasNextYear = isSeoYear(nextYear);
             </li>
           </ul>
         </div>
-
-        <div class="site-footer__col">
-          <h2>Калькуляторы</h2>
-          <ul>
-            <li v-for="tool in TOOLS" :key="tool.slug">
-              <RouterLink :to="toolPath(tool)">{{ tool.title }}</RouterLink>
-            </li>
-          </ul>
-        </div>
-
-        <div class="site-footer__col">
-          <h2>Статьи</h2>
-          <ul>
-            <li>
-              <RouterLink :to="ARTICLES_BASE">Все статьи</RouterLink>
-            </li>
-            <li v-for="article in ARTICLES" :key="article.slug">
-              <RouterLink :to="articlePath(article)">
-                {{ article.title }}
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
       </nav>
 
       <div class="site-footer__bottom">
@@ -107,7 +82,7 @@ const hasNextYear = isSeoYear(nextYear);
 
 .site-footer__cols {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px 24px;
 }
 
@@ -165,12 +140,6 @@ const hasNextYear = isSeoYear(nextYear);
 .site-footer__bottom a:hover {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
-}
-
-@media (max-width: 900px) {
-  .site-footer__cols {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 768px) {

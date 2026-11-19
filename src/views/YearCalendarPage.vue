@@ -23,14 +23,12 @@ import HolidayIcon from "@/components/icons/HolidayIcon.vue";
 import { useHolidays } from "@/composables/useHolidays";
 import { getCalendarYears } from "@/composables/useProductionCalendar";
 import { getYearMonths, sumWorkTime, formatHours } from "@/utils/workTime";
-import { TOOLS, toolPath } from "@/data/tools";
 import {
   HOLIDAY_PAGES,
   HOLIDAYS_BASE,
   holidayPath,
 } from "@/data/holidayPages";
 import { MONTHS, monthPath, hasMonthPage } from "@/data/months";
-import { ARTICLES_BASE } from "@/data/articles";
 
 const props = defineProps<{
   year: number;
@@ -314,11 +312,6 @@ const holidaysTitle = computed(() =>
                 Норма по всем годам
               </RouterLink>
             </li>
-            <li>
-              <RouterLink class="year-nav__link" :to="ARTICLES_BASE">
-                Статьи о рабочем времени
-              </RouterLink>
-            </li>
           </ul>
         </div>
 
@@ -333,17 +326,6 @@ const holidaysTitle = computed(() =>
             <li v-for="holiday in HOLIDAY_PAGES" :key="holiday.slug">
               <RouterLink class="year-nav__link" :to="holidayPath(holiday)">
                 {{ holiday.name }}
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
-
-        <div class="year-nav__col reveal">
-          <h2 class="year-nav__title">Калькуляторы</h2>
-          <ul class="year-nav__list">
-            <li v-for="tool in TOOLS" :key="tool.slug">
-              <RouterLink class="year-nav__link" :to="toolPath(tool)">
-                {{ tool.title }}
               </RouterLink>
             </li>
           </ul>
@@ -680,7 +662,7 @@ const holidaysTitle = computed(() =>
 
 .year-nav__cols {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 32px;
 }
 
@@ -882,12 +864,6 @@ const holidaysTitle = computed(() =>
 }
 
 /* ===== Адаптив ===== */
-@media (max-width: 1180px) {
-  .year-nav__cols {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
   .hero {
     padding: 34px 24px 26px;

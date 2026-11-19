@@ -3,9 +3,7 @@
  * Один источник правды для шапки и футера, чтобы разделы не расходились.
  */
 import { getCurrentYear } from "@/utils/date";
-import { TOOLS_BASE } from "./tools";
 import { HOLIDAYS_BASE } from "./holidayPages";
-import { ARTICLES_BASE } from "./articles";
 
 export interface NavItem {
   label: string;
@@ -25,8 +23,6 @@ export function getNavItems(): NavItem[] {
     { label: "Календарь", to: `/year/${year}`, match: "/year" },
     { label: "Норма времени", to: "/norma", match: "/norma" },
     { label: "Праздники", to: HOLIDAYS_BASE, match: HOLIDAYS_BASE },
-    { label: "Калькуляторы", to: TOOLS_BASE, match: TOOLS_BASE },
-    { label: "Статьи", to: ARTICLES_BASE, match: ARTICLES_BASE },
   ];
 }
 

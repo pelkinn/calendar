@@ -21,7 +21,6 @@ import {
 import { getMonthHolidays } from "@/data/holidays";
 import { plural } from "@/utils/dateCalc";
 import { HOLIDAYS_BASE } from "@/data/holidayPages";
-import { TOOLS, toolPath } from "@/data/tools";
 import MonthCard from "@/components/MonthCard.vue";
 
 const props = defineProps<{
@@ -316,9 +315,6 @@ const crumbs = computed(() => [
         </li>
         <li>
           <RouterLink :to="HOLIDAYS_BASE">Праздники России</RouterLink>
-        </li>
-        <li v-for="tool in TOOLS" :key="tool.slug">
-          <RouterLink :to="toolPath(tool)">{{ tool.title }}</RouterLink>
         </li>
       </ul>
     </nav>

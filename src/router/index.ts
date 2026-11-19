@@ -1,14 +1,12 @@
 import { type RouteRecordRaw } from "vue-router";
 import { getCurrentYear } from "@/utils/date";
 import YearCalendarPage from "@/views/YearCalendarPage.vue";
-import { TOOLS, TOOLS_BASE, toolPath } from "@/data/tools";
 import {
   HOLIDAY_PAGES,
   HOLIDAYS_BASE,
   holidayPath,
 } from "@/data/holidayPages";
 import { MONTHS, MONTH_PAGE_YEARS, monthPath } from "@/data/months";
-import { ARTICLES, ARTICLES_BASE, articlePath } from "@/data/articles";
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -48,19 +46,6 @@ export const routes: RouteRecordRaw[] = [
     }),
   },
   {
-    path: TOOLS_BASE,
-    name: "tools-index",
-    component: () => import("@/views/ToolsIndexPage.vue"),
-  },
-  // Калькуляторы: маршрут на каждый инструмент из каталога
-  ...TOOLS.map(
-    (tool): RouteRecordRaw => ({
-      path: toolPath(tool),
-      name: `tool-${tool.slug}`,
-      component: () => import(`@/views/tools/${tool.view}.vue`),
-    }),
-  ),
-  {
     path: HOLIDAYS_BASE,
     name: "holidays-index",
     component: () => import("@/views/HolidaysIndexPage.vue"),
@@ -72,20 +57,6 @@ export const routes: RouteRecordRaw[] = [
       name: `holiday-${page.slug}`,
       component: () => import("@/views/HolidayPage.vue"),
       props: { page },
-    }),
-  ),
-  {
-    path: ARTICLES_BASE,
-    name: "articles-index",
-    component: () => import("@/views/ArticlesIndexPage.vue"),
-  },
-  // Статьи: одна вьюха, содержимое приходит пропсом
-  ...ARTICLES.map(
-    (article): RouteRecordRaw => ({
-      path: articlePath(article),
-      name: `article-${article.slug}`,
-      component: () => import("@/views/ArticlePage.vue"),
-      props: { article },
     }),
   ),
   {

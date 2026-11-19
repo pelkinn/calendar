@@ -12,7 +12,6 @@ import {
   WEEK_HOURS,
   type WeekHours,
 } from "@/utils/workTime";
-import { TOOLS, toolPath } from "@/data/tools";
 import AppLayout from "@/components/AppLayout.vue";
 import YearSelect from "@/components/YearSelect.vue";
 import PrintIcon from "@/components/icons/PrintIcon.vue";
@@ -310,11 +309,6 @@ const weekHoursList = WEEK_HOURS as readonly WeekHours[];
           <li>
             <RouterLink class="norm-nav__link" to="/norma">
               Норма рабочего времени за все годы
-            </RouterLink>
-          </li>
-          <li v-for="tool in TOOLS" :key="tool.slug">
-            <RouterLink class="norm-nav__link" :to="toolPath(tool)">
-              {{ tool.title }}
             </RouterLink>
           </li>
         </ul>

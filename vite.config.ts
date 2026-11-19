@@ -5,14 +5,12 @@ import { writeFileSync } from "node:fs";
 import type { ViteSSGOptions } from "vite-ssg";
 import { SEO_YEAR_START, SEO_YEAR_END } from "./src/types/calendar";
 import productionCalendar from "./src/data/production-calendar.json";
-import { TOOLS, TOOLS_BASE, toolPath } from "./src/data/tools";
 import {
   HOLIDAY_PAGES,
   HOLIDAYS_BASE,
   holidayPath,
 } from "./src/data/holidayPages";
 import { MONTHS, MONTH_PAGE_YEARS, monthPath } from "./src/data/months";
-import { ARTICLES, ARTICLES_BASE, articlePath } from "./src/data/articles";
 
 interface ViteConfigWithSSG {
   ssgOptions?: ViteSSGOptions;
@@ -35,15 +33,11 @@ const staticRoutes = [
   ...seoYears.map((y) => `/year/${y}`),
   "/norma",
   ...normYears.map((y) => `/norma/${y}`),
-  TOOLS_BASE,
-  ...TOOLS.map((tool) => toolPath(tool)),
   HOLIDAYS_BASE,
   ...HOLIDAY_PAGES.map((page) => holidayPath(page)),
   ...MONTH_PAGE_YEARS.flatMap((year) =>
     MONTHS.map((month) => monthPath(year, month)),
   ),
-  ARTICLES_BASE,
-  ...ARTICLES.map((article) => articlePath(article)),
 ];
 
 /**

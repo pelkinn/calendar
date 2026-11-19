@@ -5,7 +5,6 @@ import AppLayout from "@/components/AppLayout.vue";
 import { getCalendarYears } from "@/composables/useProductionCalendar";
 import { getYearMonths, sumWorkTime, formatHours } from "@/utils/workTime";
 import { getCurrentYear } from "@/utils/date";
-import { TOOLS, toolPath } from "@/data/tools";
 
 const normYears = getCalendarYears();
 const currentYear = getCurrentYear();
@@ -117,9 +116,6 @@ useHead({
           <RouterLink :to="`/norma/${currentYear}`">
             Норма рабочего времени на {{ currentYear }} год
           </RouterLink>
-        </li>
-        <li v-for="tool in TOOLS" :key="tool.slug">
-          <RouterLink :to="toolPath(tool)">{{ tool.title }}</RouterLink>
         </li>
       </ul>
     </nav>
